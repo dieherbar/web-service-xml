@@ -1,6 +1,13 @@
 import { parseString } from 'xml2js';
 import { stripPrefix } from 'xml2js/lib/processors.js';
 
+// Simulación de "base de datos"
+const clientesBd = [
+    { stcd1: "J99542516", codAcr: "0000527733" },
+    { stcd1: "A87654321", codAcr: "0000123456" },
+    { stcd1: "C99999999", codAcr: "0000995599" }
+];
+
 export const procesarSoap = async (req, res) => {
     const xml = req.body;
     const idsValidos = ['A87654321', 'J99542516', 'C99999999'];
@@ -35,22 +42,22 @@ export const procesarSoap = async (req, res) => {
 
                 // Lógica de respuesta
                 let codAcr = '';
-                let codDeud = '';
-
-                // Simulamos solo si coincide con un STCD1 válido
-                if (stcd1 === 'J99542516') {
-                    codAcr = '0000527733';
-                    codDeud = '';
-                }
+                // Buscar en la "base de datos"
+                const clientesMap = clientesBd.reduce((map, cliente) => {
+                    map[cliente.stcd1] = cliente.codAcr;
+                    return map;
+                }, {});
+                codAcr = clientesMap[id] || '000';
+                //console.log(clientesMap[id])
                 // Respuesta si el ID es válido
                 if (idsValidos.includes(id)) {
-                    //<COD_DEUD>${codDeud}</COD_DEUD>
+                    //<COD_ACR>${codAcr}</COD_ACR>
                     const respuestaSoap = `<?xml version="1.0" encoding="UTF-8"?>
                 <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
                 <soap-env:Header/>
                 <soap-env:Body>
                 <n0:Z_FI_WS_CONS_DEUD_ACRResponse xmlns:n0="urn:sap-com:document:sap:rfc:functions">
-                <COD_ACR>0000527733</COD_ACR>
+                <COD_ACR>${codAcr}</COD_ACR>
                 <COD_DEUD></COD_DEUD>
     </n0:Z_FI_WS_CONS_DEUD_ACRResponse>
   </soap-env:Body>
@@ -59,11 +66,34 @@ export const procesarSoap = async (req, res) => {
                     res.set('Content-Type', 'text/xml; charset=utf-8');
                     //res.type('application/xml');
                     res.send(respuestaSoap);
+                } else {
+                    // Responder con Fault SOAP
+                    const faultXML = `
+        <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap-env:Header/>
+            <soap-env:Body>
+                <soap-env:Fault>
+                    <faultcode>soap-env:Client</faultcode>
+                    <faultstring xml:lang="es">NO_ACR</faultstring>
+                    <detail>
+                        <n0:Z_FI_WS_CONS_DEUD_ACR.Exception xmlns:n0="urn:sap-com:document:sap:rfc:functions">
+                            <Name>NO_ACR</Name>
+                            <Text/>
+                        </n0:Z_FI_WS_CONS_DEUD_ACR.Exception>
+                    </detail>
+                </soap-env:Fault>
+            </soap-env:Body>
+        </soap-env:Envelope>
+    `.trim();
+
+                    //res.set("Content-Type", "text/xml");
+                    res.set('Content-Type', 'text/xml; charset=utf-8');
+                    res.send(faultXML);
                 }
             }
 
         );
-        
+
 
     } catch (error) {
         console.error('❌ Error inesperado:', error);
