@@ -45,7 +45,8 @@ export const procesarSoap = async (req, res) => {
                 console.log('⏳ Simulando timeout...');
                 return setTimeout(() => {
                     const respuestaTimeout = `<?xml version="1.0" encoding="UTF-8"?>
-<soap-env:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Header/>
 <soap-env:Body>
 <n0:Z_FI_WS_CONS_DEUD_ACRResponse xmlns:n0="urn:sap-com:document:sap:rfc:functions">
 <COD_ACR>71m30u7</COD_ACR>
@@ -80,7 +81,8 @@ export const procesarSoap = async (req, res) => {
                 <COD_DEUD></COD_DEUD>
     </n0:Z_FI_WS_CONS_DEUD_ACRResponse>
   </soap-env:Body>
-</soap-env:Envelope>`;
+</soap-env:Envelope>
+`;
 
                     res.set('Content-Type', 'text/xml; charset=utf-8');
                     //res.type('application/xml');
