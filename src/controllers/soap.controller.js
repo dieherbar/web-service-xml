@@ -40,6 +40,25 @@ export const procesarSoap = async (req, res) => {
 
                 console.log('📥 Valor STCD1 recibido:', stcd1);
 
+                // Simular timeout si el ID es "timeout"
+            if (id === 'timeout') {
+                console.log('⏳ Simulando timeout...');
+                return setTimeout(() => {
+                    const respuestaTimeout = `<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Body>
+<n0:Z_FI_WS_CONS_DEUD_ACRResponse xmlns:n0="urn:sap-com:document:sap:rfc:functions">
+<COD_ACR>71m30u7</COD_ACR>
+<COD_DEUD></COD_DEUD>
+</n0:Z_FI_WS_CONS_DEUD_ACRResponse>
+</soap-env:Body>
+</soap-env:Envelope>
+                    `;
+                    res.type('application/xml');
+                    res.status(200).send(respuestaTimeout);
+                }, 10000);
+            }
+
                 // Lógica de respuesta
                 let codAcr = '';
                 // Buscar en la "base de datos"
@@ -69,21 +88,21 @@ export const procesarSoap = async (req, res) => {
                 } else {
                     // Responder con Fault SOAP
                     const faultXML = `
-        <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
-            <soap-env:Header/>
-            <soap-env:Body>
-                <soap-env:Fault>
-                    <faultcode>soap-env:Client</faultcode>
-                    <faultstring xml:lang="es">NO_ACR</faultstring>
-                    <detail>
-                        <n0:Z_FI_WS_CONS_DEUD_ACR.Exception xmlns:n0="urn:sap-com:document:sap:rfc:functions">
-                            <Name>NO_ACR</Name>
-                            <Text/>
-                        </n0:Z_FI_WS_CONS_DEUD_ACR.Exception>
-                    </detail>
-                </soap-env:Fault>
-            </soap-env:Body>
-        </soap-env:Envelope>
+<soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/">
+<soap-env:Header/>
+<soap-env:Body>
+<soap-env:Fault>
+<faultcode>soap-env:Client</faultcode>
+<faultstring xml:lang="es">NO_ACR</faultstring>
+<detail>
+<n0:Z_FI_WS_CONS_DEUD_ACR.Exception xmlns:n0="urn:sap-com:document:sap:rfc:functions">
+<Name>NO_ACR</Name>
+<Text/>
+</n0:Z_FI_WS_CONS_DEUD_ACR.Exception>
+</detail>
+</soap-env:Fault>
+</soap-env:Body>
+</soap-env:Envelope>
     `.trim();
 
                     //res.set("Content-Type", "text/xml");
