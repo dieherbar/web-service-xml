@@ -57,7 +57,7 @@ export const procesarSoap = async (req, res) => {
                     `;
                     res.set('Content-Type', 'text/xml; charset=utf-8');
                     res.status(200).send(respuestaTimeout);
-                }, 29000);//Ajuste el tiempo de espera en milisegundos
+                }, 30000);//Ajuste el tiempo de espera en milisegundos
             }
 
                 // Lógica de respuesta
